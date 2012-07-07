@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link href="http://code.jquery.com/ui/jquery-ui-git.css" type="text/css" rel="stylesheet">
         <script type="text/javascript" src="./require.js"></script>
         <style>
             body{
@@ -14,7 +15,15 @@
             table th.sortable.desc:after {
                 content: "v"
             }
-            
+            table tr.selected {
+                background-color: #ccffcc;
+            }
+            .feedback {
+                float: right;
+            }
+            .gridHolder {
+                
+            }
         </style>
         <script>
         require.config({
@@ -24,7 +33,8 @@
                 json2: "http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2",
                 backbone: "http://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min",
                 underscore: "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min",
-                text: 'requirejs_text'
+                text: 'requirejs_text',
+                jqueryUi: 'http://code.jquery.com/ui/jquery-ui-git'
             },
             shim: {
                 json2: {
@@ -36,15 +46,22 @@
                 backbone: {
                     deps: ['underscore', 'jquery', 'json2'],
                     exports: 'Backbone'
+                },
+                jqueryUi: {
+                    deps: ['jquery'],
+                    exports: '$.ui'
                 }
             }
         });
         </script>
         
         <script>
-            require(['./backbone-grid', 'backbone', 'jquery', 'text!testdata.json', 'underscore'], function (Grid, backbone, $, testdata, _) {
+            require(['./backbone-grid', 'backbone', 'jquery', 'text!testdata.json', 'underscore', 'jqueryUi'], function (Grid, backbone, $, testdata, _) {
                 $(document).ready(function () {
-                    
+                    $( "#sample" ).tabs();
+                    $("#sample").delegate('ul a', 'click', function () {
+                        window.location.hash = $(this).attr('href')
+                    })
                     collection = new Backbone.Collection(JSON.parse(testdata));
                     console.log(collection.length);
                     var noTemplateGrid = new Grid({
@@ -89,20 +106,36 @@
                                 }
                             ],
                             collection: collection,
-                            el: $("#sortable"),
+                            el: $("#sortablegrid"),
                             rowTemplate: _template
                         });
                         SortableGrid.render();
-                        SortableGrid.on('rowClicked', function (row, model) {
-                            alert("Row Clicked: for model cid:" + model.cid)
+                    });
+                    
+                    require(['behaviors/Selectable'], function (Selectable) {
+                        SelectableGrid = new Grid({
+                            behaviors: [
+                                {
+                                    behavior: Selectable,
+                                    options: {
+                                        selection: 'multiple'
+                                    }
+                                }
+                            ],
+                            collection: collection,
+                            el: $("#selectablegrid"),
+                            rowTemplate: _template
+                        });
+                        SelectableGrid.render();
+                        SelectableGrid.on('selectionChange', function (modelsSelected) {
+                            $("#selectablegrid_feedback").empty();
+                            _.each(modelsSelected, function (model) {
+                                var $data = $("<div>");
+                                $data.text(model.get('name'));
+                                $("#selectablegrid_feedback").append($data)
+                            })
                         })
                     });
-                    _TemplateGrid.on('rowClicked', function (row, model) {
-                        alert("Row Clicked: for model cid:" + model.cid)
-                    })
-                    noTemplateGrid.on('rowClicked', function (row, model) {
-                        alert("Row Clicked: for model cid:" + model.cid)
-                    })
                 });
             })
         </script>
@@ -112,27 +145,57 @@
         <div class="controller">
             <button id="removeFirst">Remove first model in collection</button>
         </div>
-        <div class="sample">
-            <h2>Column Definition Only</h2>
-            <div id="notemplate">
-                <table></table>
+        <div id="sample">
+            <ul>
+                    <li><a href="#column">Column Definition Only</a></li>
+                    <li><a href="#template">Row Template</a></li>
+                    <li><a href="#sortable">Sortable behavior</a></li>
+                    <li><a href="#selectable">Selectable behavior</a></li>
+            </ul>
+            <div id="column">
+                <h2>Column Definition Only</h2>
+                <div id="notemplate">
+                    <table></table>
+                </div>
             </div>
-            <h2>Row Template Passed</h2>
-            <div id="_template">
-                <table></table>
+            <div id="template">
+                <h2>Row Template Passed</h2>
+                <div id="_template">
+                    <table></table>
+                </div>
             </div>
-            <h2>Sortable behavior</h2>
             <div id="sortable">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="sortable name" data-column="name">Name</th>
-                            <th class="sortable location" data-column="location">Location</th>
-                            <th class="sortable startDate" data-column="startDate">Start Date</th>
-                            <th class="sortable endDate" data-column="endDate">End Date</th>
-                        </tr>
-                    </thead>
-                </table>
+                <h2>Sortable behavior</h2>
+                <div id="sortablegrid" class="gridHolder">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable name" data-column="name">Name</th>
+                                <th class="sortable location" data-column="location">Location</th>
+                                <th class="sortable startDate" data-column="startDate">Start Date</th>
+                                <th class="sortable endDate" data-column="endDate">End Date</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div id="selectable">
+                <h2>Selectable behavior</h2>
+                <div id="selectablegrid_feedback" class="feedback">
+                </div>
+                <div id="selectablegrid" class="gridHolder">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable name" data-column="name">Name</th>
+                                <th class="sortable location" data-column="location">Location</th>
+                                <th class="sortable startDate" data-column="startDate">Start Date</th>
+                                <th class="sortable endDate" data-column="endDate">End Date</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                
             </div>
         </div>
     </body>

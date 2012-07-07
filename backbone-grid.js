@@ -23,7 +23,10 @@ define([
         
         rowClicked: function (e) {
             var row = $(e.currentTarget);
-            this.trigger('rowClicked', row, this.collection.getByCid(row.attr('data-model-cid')));
+            var cid = row.attr('data-model-cid');
+            if(cid) {
+                this.trigger('rowClicked', row, this.collection.getByCid(cid));
+            }
         },
         
         initialize: function () {
@@ -117,13 +120,20 @@ define([
             return template(data);
         },
         
+        getModelRow: function (model) {
+            return this._modelRowRefs[model.cid];
+        },
+        
         updateList: function () {
             this.$tbody.empty();
             this.$tbody.detach();
             this._modelRowRefs = {};
             var rowTemplate = this.getRowTemplate();
             
-            this.collection.each(function (model) {
+            var models = [].concat(this.collection.models);
+            this.trigger('prepareModels', models);
+            for(var i = 0, l = models.length; i < l; i++) {
+                var model = models[i];
                 var tr = $(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
                 this._modelRowRefs[model.cid] = tr;
                 tr.attr({
@@ -131,7 +141,7 @@ define([
                     'data-model-cid': model.cid
                 });
                 this.$tbody.append(tr);
-            }, this);
+            }
             this.$tbody.appendTo(this.$table);
             this.trigger('listUpdated');
         },
