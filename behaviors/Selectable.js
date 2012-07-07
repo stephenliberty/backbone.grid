@@ -2,9 +2,9 @@
  * 
  */
 define(['./_behavior'], function (base) {
-    var sortable = function () {};
-    sortable.prototype = new base();
-    _.extend(sortable.prototype, {
+    var selectable = function () {};
+    selectable.prototype = new base();
+    _.extend(selectable.prototype, {
         
         selection: 'single',
         
@@ -124,5 +124,5 @@ define(['./_behavior'], function (base) {
         }
         
     });
-    return sortable;
+    return selectable;
 })

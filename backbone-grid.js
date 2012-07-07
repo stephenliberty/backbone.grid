@@ -80,6 +80,7 @@ define([
             if(!this.$table || this.$table.length == 0) {
                 logger.warn("Creating grid with no table")
             }
+            this.trigger('referencesSetUp');
         },
         
         setElement: function () {

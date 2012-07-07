@@ -18,11 +18,21 @@
             table tr.selected {
                 background-color: #ccffcc;
             }
+            table tbody .price {
+                text-align: right;
+            }
             .feedback {
                 float: right;
             }
-            .gridHolder {
-                
+            .limitedWidth {
+                width: 900px;
+            }
+            .limitedWidth table, .limitedWidth .scroller{
+                width: 100%;
+            }
+            .limitedWidth .scroller {
+                max-height: 100px;
+                overflow-y: auto;
             }
         </style>
         <script>
@@ -82,6 +92,7 @@
                         "<td><%- location %></td>",
                         "<td><%- new Date(startDate).toUTCString() %></td>",
                         "<td><%- new Date(endDate).toUTCString() %></td>",
+                        "<td class='price'>$<%- price %></td>",
                         "</tr>"
                     ].join("\n"));
                     var _TemplateGrid = new Grid({
@@ -113,7 +124,7 @@
                     });
                     
                     require(['behaviors/Selectable'], function (Selectable) {
-                        SelectableGrid = new Grid({
+                        var SelectableGrid = new Grid({
                             behaviors: [
                                 {
                                     behavior: Selectable,
@@ -136,6 +147,32 @@
                             })
                         })
                     });
+                    
+                    require(['behaviors/Scrollable', 'behaviors/Sortable'], function (Scrollable, Sortable) {
+                        var ScrollableGrid = new Grid({
+                            behaviors: [
+                                {
+                                    behavior: Scrollable,
+                                    options: {
+                                        selection: 'multiple'
+                                    }
+                                },
+                                {
+                                    behavior: Sortable, 
+                                    options: {
+                                        defaultSortSelector: 'name'
+                                    }
+                                }
+                            ],
+                            collection: collection,
+                            el: $("#scrollablegrid"),
+                            rowTemplate: _template
+                        });
+                        ScrollableGrid.$el.find('tfoot .price').text(
+                            "Total: $".concat(collection.reduce(function(memo, model){ return memo + model.get('price'); }, 0))
+                        )
+                        ScrollableGrid.render();
+                    });
                 });
             })
         </script>
@@ -151,6 +188,7 @@
                     <li><a href="#template">Row Template</a></li>
                     <li><a href="#sortable">Sortable behavior</a></li>
                     <li><a href="#selectable">Selectable behavior</a></li>
+                    <li><a href="#scrollable">Scrollable behavior</a></li>
             </ul>
             <div id="column">
                 <h2>Column Definition Only</h2>
@@ -174,6 +212,7 @@
                                 <th class="sortable location" data-column="location">Location</th>
                                 <th class="sortable startDate" data-column="startDate">Start Date</th>
                                 <th class="sortable endDate" data-column="endDate">End Date</th>
+                                <th class="sortable price" data-column="price">Price</th>
                             </tr>
                         </thead>
                     </table>
@@ -187,16 +226,46 @@
                     <table>
                         <thead>
                             <tr>
-                                <th class="sortable name" data-column="name">Name</th>
-                                <th class="sortable location" data-column="location">Location</th>
-                                <th class="sortable startDate" data-column="startDate">Start Date</th>
-                                <th class="sortable endDate" data-column="endDate">End Date</th>
+                                <th class="name" data-column="name">Name</th>
+                                <th class="location" data-column="location">Location</th>
+                                <th class="startDate" data-column="startDate">Start Date</th>
+                                <th class="endDate" data-column="endDate">End Date</th>
+                                <th class="price" data-column="price">Price</th>
                             </tr>
                         </thead>
                     </table>
                 </div>
-                
             </div>
+            
+            <div id="scrollable">
+                <h2>Scrollable (and Sortable) behavior</h2>
+                <div id="scrollablegrid" class="gridHolder">
+                    <table class="limitedWidth">
+                        <thead>
+                            <tr>
+                                <th class="sortable name" data-column="name">Name</th>
+                                <th class="sortable location" data-column="location">Location</th>
+                                <th class="sortable startDate" data-column="startDate">Start Date</th>
+                                <th class="sortable endDate" data-column="endDate">End Date</th>
+                                <th class="sortable price" data-column="price">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="price"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
         </div>
     </body>
 </html>
