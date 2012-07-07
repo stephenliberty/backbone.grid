@@ -15,9 +15,26 @@ define([
         
         columns: [],
         
+        _modelRowRefs: {},
+        
+        events: {
+            'click tbody tr': 'rowClicked'
+        },
+        
+        rowClicked: function (e) {
+            var row = $(e.currentTarget);
+            this.trigger('rowClicked', row, this.collection.getByCid(row.attr('data-model-cid')));
+        },
+        
         initialize: function () {
             _.each(this.options.behaviors, function (behavior) {
-                var b = new behavior();
+                var b;
+                if(_.isFunction(behavior)) {
+                    b = new behavior();
+                } else {
+                    b = new behavior.behavior();
+                    _.extend(b, behavior.options);
+                }
                 b.setGrid(this);
                 this.behaviors.push(b);
             }, this);
@@ -52,7 +69,9 @@ define([
             this.$thead = this.$table.find('thead');
             
             this.$tbody = this.$table.find('tbody');
-            
+            if(!this.$tbody.length) {
+                this.$tbody = $("<tbody>");
+            }
             this.$tfoot = this.$table.find('tfoot');
             
             if(!this.$table || this.$table.length == 0) {
@@ -76,6 +95,10 @@ define([
             if(!this.rowTemplate && this.columns.length) {
                 this.rowTemplate = this.createTemplateFromColumnDefinition();
             }
+            
+            if(!this.rowTemplate) {
+                throw "Grid has no idea how to construct itself";
+            }
             return this.rowTemplate;
         },
         
@@ -97,17 +120,27 @@ define([
         updateList: function () {
             this.$tbody.empty();
             this.$tbody.detach();
+            this._modelRowRefs = {};
             var rowTemplate = this.getRowTemplate();
             
             this.collection.each(function (model) {
-                this.$tbody.append(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
+                var tr = $(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
+                this._modelRowRefs[model.cid] = tr;
+                tr.attr({
+                    'data-model-id': model.id,
+                    'data-model-cid': model.cid
+                });
+                this.$tbody.append(tr);
             }, this);
             this.$tbody.appendTo(this.$table);
             this.trigger('listUpdated');
         },
         
-        updateRow: function () {
-            
+        updateRow: function (model) {
+            var $row = this._modelRowRefs[model.cid];
+            var rowTemplate = this.getRowTemplate();
+            $row.replaceWith(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
+            this.trigger('rowUpdated', $row, model)
         },
         
         undelegateEvents: function () {
@@ -127,8 +160,8 @@ define([
                 'change': this.updateRow
             };
             _.each(events, function (callback, key) {
-                this.collection.off(key, callback);
-                this.collection.on(key, callback);
+                this.collection.off(key, callback, this);
+                this.collection.on(key, callback, this);
             }, this);
             this.trigger('collectionChanged', collection);
         },
@@ -138,6 +171,7 @@ define([
                 this.setCollection(collection);
             }
             this.setupReferences();
+            this.trigger('render:before');
             this.updateList();
             this.trigger('render');
         }
