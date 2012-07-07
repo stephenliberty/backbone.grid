@@ -26,7 +26,7 @@ The behavior constructor is called on grid initialization, and then the grid tel
 Examples can be found in the index.html file, which is currently the test playground.
 
 ##Requires
-- requirejs or another compatible module loader for dealing with dependencies
+- requirejs or another compatible module loader for dealing with dependencies (see index.html)
 - jQuery
 - Backbone
 - Underscore
@@ -36,7 +36,7 @@ TODO:
 - Behaviors
     - Groupable
     - Editable
-    - Scrollable
+    - Scrollable (documentation, caveats)
     - Massive Scale
     - Minimum Length
-    - Selectable
+    - Selectable (documentation, selectable as checkboxes)

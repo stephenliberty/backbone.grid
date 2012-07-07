@@ -171,6 +171,11 @@
                         ScrollableGrid.$el.find('tfoot .price').text(
                             "Total: $".concat(collection.reduce(function(memo, model){ return memo + model.get('price'); }, 0))
                         )
+                        collection.on('add change remove', function () {
+                            ScrollableGrid.$el.find('tfoot .price').text(
+                                "Total: $".concat(collection.reduce(function(memo, model){ return memo + model.get('price'); }, 0))
+                            )
+                        })
                         ScrollableGrid.render();
                     });
                 });
