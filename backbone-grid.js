@@ -30,6 +30,11 @@ define([
         },
         
         initialize: function () {
+            this.collectionEvents = {
+                'add remove reset': this.updateList,
+                'change': this.updateRow
+            };
+            
             _.each(this.options.behaviors, function (behavior) {
                 var b;
                 if(_.isFunction(behavior)) {
@@ -166,15 +171,18 @@ define([
         
         setCollection: function (collection) {
             this.collection = collection;
-            var events = {
-                'add remove reset': this.updateList,
-                'change': this.updateRow
-            };
-            _.each(events, function (callback, key) {
+            _.each(this.collectionEvents, function (callback, key) {
                 this.collection.off(key, callback, this);
                 this.collection.on(key, callback, this);
             }, this);
             this.trigger('collectionChanged', collection);
+        },
+        
+        remove: function () {
+            _.each(this.collectionEvents, function (callback, key) {
+                this.collection.off(key, callback, this);
+            }, this);
+            Backbone.View.prototype.remove.apply(this, arguments);
         },
         
         render: function (collection) {

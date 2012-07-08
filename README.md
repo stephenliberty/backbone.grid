@@ -25,6 +25,8 @@ The behavior constructor is called on grid initialization, and then the grid tel
 
 Examples can be found in the index.html file, which is currently the test playground.
 
+The other reason behind this grid is its use of templates. I feel strongly that as little html/css as possible should be defined by the component. In any cases possible, I want to allow a user to be able to set a template to be used for representing any kind of data - be it a table row, an editor, the sortable headers, etc.
+
 ##Requires
 - requirejs or another compatible module loader for dealing with dependencies (see index.html)
 - jQuery

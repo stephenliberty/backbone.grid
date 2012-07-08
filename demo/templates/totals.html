@@ -1,0 +1,27 @@
+<script type="text/x-template" id="totalableGridTemplate">
+    <div id="renderTo" class="gridHolder">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sortable name" data-column="name">Name</th>
+                    <th class="sortable location" data-column="location">Location</th>
+                    <th class="sortable startDate" data-column="startDate">Start Date</th>
+                    <th class="sortable endDate" data-column="endDate">End Date</th>
+                    <th class="sortable price" data-column="price">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td><span data-column="location"></span> distinct locations</td>
+                    <td></td>
+                    <td></td>
+                    <td>$<span data-column="price"></span></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</script>
