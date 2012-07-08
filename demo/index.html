@@ -229,7 +229,7 @@
                         },
                         basicTotals: function () {
                             this.before();
-                            $("#demo").find('h2').text('Sortable behavior');
+                            $("#demo").find('h2').text('Totals behavior');
                             var self = this;
                             require(['behaviors/Sortable', 'behaviors/Totals', 'text!demo/templates/totals.html'], function (Sortable, Totals, template) {
                                 $('#renderTo').replaceWith($(template).html())
@@ -247,6 +247,12 @@
                                                 columnHandlers: {
                                                     location: function () {
                                                         return _.keys(this.grid.collection.groupBy(function(model){ return model.get('location'); })).length;
+                                                    },
+                                                    startDate: {
+                                                        handler: function () {
+                                                            return this.grid.collection.max(function (model) {return model.get('startDate')}).get('startDate');
+                                                        },
+                                                        template: _.template("Latest start: <%- new Date(value).toUTCString() %>")
                                                     }
                                                 }
                                             }

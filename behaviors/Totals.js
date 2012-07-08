@@ -1,4 +1,4 @@
-define(['./_behavior'], function (base) {
+define(['./_behavior', 'underscore'], function (base, _) {
     var totals = function () {}
     totals.prototype = new base();
     _.extend(totals.prototype, {
@@ -18,7 +18,11 @@ define(['./_behavior'], function (base) {
         
         getHandlerForColumn: function (column) {
             if(this.columnHandlers[column]) {
-                return this.columnHandlers[column]
+                if(this.columnHandlers[column].handler) {
+                    return this.columnHandlers[column].handler;
+                } else {
+                    return this.columnHandlers[column];
+                }
             } else {
                 return this.defaultHandler;
             }
@@ -28,7 +32,12 @@ define(['./_behavior'], function (base) {
             var self = this;
             this.grid.$tfoot.find("[data-column]").each(function () {
                 var column = $(this).attr('data-column');
-                $(this).text(self.getHandlerForColumn(column).call(self, column));
+                var value = self.getHandlerForColumn(column).call(self, column);
+                if(self.columnHandlers[column] && self.columnHandlers[column].template) {
+                    $(this).html(self.columnHandlers[column].template({value: value}));
+                } else {
+                    $(this).text(value);
+                }
             });
         }
     });
