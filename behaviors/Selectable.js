@@ -14,7 +14,6 @@ define(['./_behavior'], function (base) {
         
         setGrid: function (grid) {
             this.grid = grid;
-            this.grid.on('eventsDelegated', this.delegateSelectionEvents, this);
             this.grid.on('render:before', this.presortCollection, this);
             this.grid.on('rowClicked', this.handleRowClick, this);
             this.grid.on('collectionChanged', this.setCollection, this);
@@ -117,10 +116,6 @@ define(['./_behavior'], function (base) {
         
         getSelectedModels: function () {
             return _.values(this.selectedModels);
-        },
-        
-        delegateSelectionEvents: function () {
-            
         }
         
     });

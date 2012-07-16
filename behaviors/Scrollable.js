@@ -1,18 +1,102 @@
 /**
  * 
  */
-define(['./_behavior'], function (base) {
+define(['./_behavior', 'mousewheel'], function (base) {
     var scrollable = function () {};
     scrollable.prototype = new base();
     _.extend(scrollable.prototype, {
         
         columnWidthFrom: 'content',
         
+        maxRows: 5,
+        
         setGrid: function (grid) {
             this.grid = grid;
-            this.grid.on('referencesSetUp', this.createScrollingElements, this);
-            this.grid.on('listUpdated', this.sizeColumns, this);
+            this.grid.on('prepareModels', this.spliceModels, this);
+            this.grid.on('render', this.updateScroller, this);
+            this.grid.on('render', this.setupScrollEvents, this);
         },
+        
+        setupScrollEvents: function () {
+            var self = this;
+            this.scroller.on('scroll', function () {
+                self.updateData();
+            });
+            this.grid.$el.bind('mousewheel', function (e, delta) {
+                if(delta > 0) {
+                    self.scroller.scrollTop(self.scroller.scrollTop() - self._heightPerRow);
+                } else {
+                    self.scroller.scrollTop(self.scroller.scrollTop() + self._heightPerRow);
+                }
+            });
+        },
+        
+        updateData: function () {
+            this.grid.updateList();
+        },
+        
+        updateScroller: function () {
+            if(!this.scroller) {
+                this.scroller = $("<div>").addClass('scroller');
+            }
+            var height = this.grid.$tbody.height();
+            if(height > 0) {
+                if(this.grid.$el.find('tbody').position()) {
+                    this.scroller.css({
+                        top: this.grid.$el.find('tbody').position().top,
+                        right: this.grid.$el.outerWidth() - this.grid.$tbody.width()
+                    });
+                }
+                if(this.scroller.children().length == 0) {
+                    this._heightPerRow = height / this.maxRows;
+                    var size = $("<div>").css({
+                        height: (height / this.maxRows) * this._collectionSize,
+                        width: this.getScrollbarWidth()
+                    });
+                    this.scroller.css({height: this.grid.$tbody.innerHeight()})
+                    this.scroller.append(size);
+                }
+            }
+        },
+        
+        spliceModels: function (models) {
+            this._collectionSize = models.length;
+            this.updateScroller();
+            if(models.length > this.maxRows) {
+                this.showScroller();
+            }
+            var modelsToShow = models.slice(Math.round(models.length * this.getDataPosition()), Math.round(models.length * this.getDataPosition()) + this.maxRows);
+            models.splice.apply(models, [0, models.length].concat(modelsToShow));
+        },
+        
+        showScroller: function () {
+            this.grid.$el.find('.scrollSizer').remove();
+            var self = this;
+            this.grid.$thead.find('tr').each(function () {
+                $(this).append($("<th>").addClass('scrollSizer').width(self.getScrollbarWidth()).html("&nbsp;"));
+            });
+            this.grid.$tbody.find('tr').each(function () {
+                $(this).append($("<td>").addClass('scrollSizer').width(self.getScrollbarWidth()).text(" "));
+            });
+            this.grid.$tfoot.find('tr').each(function () {
+                $(this).append($("<td>").addClass('scrollSizer').width(self.getScrollbarWidth()).text(" "));
+            });
+            
+            if(this.scroller.parents('body').length == 0) {
+                this.grid.$el.append(this.scroller);
+                this.grid.$el.css({position: 'relative'});
+            }
+        },
+        
+        
+        
+        getDataPosition: function () {
+            if(!this.scroller) {return 0;}
+            var position = this.scroller.scrollTop() / this.scroller.children().height();
+            if(_.isNaN(position)) {position = 0;}
+            return position;
+        },
+        
         
         /**
          * from http://www.alexandre-gomes.com/?p=115
@@ -46,67 +130,6 @@ define(['./_behavior'], function (base) {
         
         isOverflowing: function () {
             return this.grid.$table.get(0).scrollHeight > this.grid.$el.find('.scroller').height();
-        },
-        
-        sizeColumns: function () {
-            var columns = [];
-            if(this.columnWidthFrom == 'content') {
-                
-                this.grid.$table.find('tr:first td').each(function () {
-                    var el = $(this);
-                    columns.push(el.width());
-                });
-                this.grid.$thead.find('th').each(function (i) {
-                    var el = $(this);
-                    el.width(columns[i]);
-                });
-                this.grid.$tfoot.find('td').each(function (i) {
-                    var el = $(this);
-                    el.width(columns[i]);
-                });
-                if(this.isOverflowing()) {
-                    this.grid.$el.find('.scrollSize').innerWidth(this.getScrollbarWidth())
-                }
-            } else if (this.columnWidthFrom == 'header') {
-                if(this.isOverflowing()) {
-                    this.grid.$el.find('.scrollSize').innerWidth(this.getScrollbarWidth())
-                }
-                this.grid.$thead.find('th').each(function (i) {
-                    var el = $(this);
-                    columns.push(el.width());
-                });
-                this.grid.$table.find('tr:first td').each(function (i) {
-                    var el = $(this);
-                    el.width(columns[i]);
-                });
-            }
-        },
-        
-        createScrollingElements: function () {
-            var originalTableHeader = this.grid.$thead.detach();
-            var originalTableFooter = this.grid.$tfoot.detach();
-            var originalTableBody = this.grid.$tbody.detach();
-            var containingDiv = $("<div>").addClass('scrollingContainer');
-            if(this.containingDiv) {
-                var oldContainer = this.containingDiv;
-                this.grid.$table = oldContainer;
-            }
-            this.containingDiv = containingDiv;
-            var classes = this.grid.$table.attr('class');
-            var id = this.grid.$table.attr('id');
-            containingDiv.attr({'class': classes, id: id});
-            
-            this.grid.$table.replaceWith(containingDiv);
-            var tht = $("<table>").append(originalTableHeader);
-            var tft = $("<table>").append(originalTableFooter);
-            var tbt = $("<table>").append(originalTableBody);
-            var scrollingDiv = $("<div>").addClass('scroller').append(tbt);
-            originalTableHeader.find("tr").append($("<th>").addClass('scrollSize'));
-            originalTableFooter.find("tr").append($("<th>").addClass('scrollSize'));
-            containingDiv.append(tht);
-            containingDiv.append(scrollingDiv);
-            containingDiv.append(tft);
-            this.grid.$table = tbt;
         }
         
     });

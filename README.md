@@ -1,4 +1,4 @@
-backbone.grid
+backbone.grid (backbone.js grid)
 =============
 
 ##Why

@@ -131,25 +131,27 @@ define([
         },
         
         updateList: function () {
-            this.$tbody.empty();
-            this.$tbody.detach();
             this._modelRowRefs = {};
-            var rowTemplate = this.getRowTemplate();
-            
             var models = [].concat(this.collection.models);
             this.trigger('prepareModels', models);
+            this.$tbody.empty();
             for(var i = 0, l = models.length; i < l; i++) {
                 var model = models[i];
-                var tr = $(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
-                this._modelRowRefs[model.cid] = tr;
-                tr.attr({
-                    'data-model-id': model.id,
-                    'data-model-cid': model.cid
-                });
+                var tr = this.addRow(model);
                 this.$tbody.append(tr);
             }
-            this.$tbody.appendTo(this.$table);
             this.trigger('listUpdated');
+        },
+        
+        addRow: function (model) {
+            var rowTemplate = this.getRowTemplate();
+            var tr = $(this.callTemplate(rowTemplate, model[this.modelDataCall]()));
+            this._modelRowRefs[model.cid] = tr;
+            tr.attr({
+                'data-model-id': model.id,
+                'data-model-cid': model.cid
+            });
+            return tr;
         },
         
         updateRow: function (model) {
@@ -182,6 +184,7 @@ define([
             _.each(this.collectionEvents, function (callback, key) {
                 this.collection.off(key, callback, this);
             }, this);
+            this.trigger('remove');
             Backbone.View.prototype.remove.apply(this, arguments);
         },
         
@@ -194,5 +197,5 @@ define([
             this.updateList();
             this.trigger('render');
         }
-    })
-})
+    });
+});
