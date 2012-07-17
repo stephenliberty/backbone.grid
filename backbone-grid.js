@@ -140,6 +140,7 @@ define([
                 var tr = this.addRow(model);
                 this.$tbody.append(tr);
             }
+            this.$tbody.appendTo(this.$table);
             this.trigger('listUpdated');
         },
         
