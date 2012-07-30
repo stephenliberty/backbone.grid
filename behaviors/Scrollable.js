@@ -17,6 +17,10 @@ define(['./_behavior', 'mousewheel'], function (base) {
             this.grid.on('render', this.setupScrollEvents, this);
         },
         
+        /**
+         * We want to be listening for scroll events on the grid, as the 
+         * actual 'scroller' is an entirely separate setup. 
+         */
         setupScrollEvents: function () {
             var self = this;
             this.scroller.on('scroll', function () {
@@ -31,10 +35,19 @@ define(['./_behavior', 'mousewheel'], function (base) {
             });
         },
         
+        /**
+         * As we scrol, we want to update the list. 
+         * @TODO: Determine whether this needs to be referenced as a 
+         * throttled method.
+         */
         updateData: function () {
             this.grid.updateList();
         },
         
+        /**
+         * Updates the size of the div within the div that has the scroll bar.
+         * Also creates the scroll bar if it doesn't exist.
+         */
         updateScroller: function () {
             if(!this.scroller) {
                 this.scroller = $("<div>").addClass('scroller');
@@ -59,6 +72,10 @@ define(['./_behavior', 'mousewheel'], function (base) {
             }
         },
         
+        /**
+         * We're going to whittle down the models to display to just a subset
+         * that is based on where the scrollbar is in its position. 
+         */
         spliceModels: function (models) {
             this._collectionSize = models.length;
             this.updateScroller();
@@ -69,6 +86,9 @@ define(['./_behavior', 'mousewheel'], function (base) {
             models.splice.apply(models, [0, models.length].concat(modelsToShow));
         },
         
+        /**
+         * Append a column of cells that will act as the scroll bar container. 
+         */
         showScroller: function () {
             this.grid.$el.find('.scrollSizer').remove();
             var self = this;
@@ -88,8 +108,10 @@ define(['./_behavior', 'mousewheel'], function (base) {
             }
         },
         
-        
-        
+        /**
+         * Determines the percent that the scroll bar has been scrolled, so 
+         * we can get the appropriate data set based off its position.
+         */
         getDataPosition: function () {
             if(!this.scroller) {return 0;}
             var position = this.scroller.scrollTop() / this.scroller.children().height();
@@ -126,7 +148,6 @@ define(['./_behavior', 'mousewheel'], function (base) {
 
             return (w1 - w2);
         },
-
         
         isOverflowing: function () {
             return this.grid.$table.get(0).scrollHeight > this.grid.$el.find('.scroller').height();

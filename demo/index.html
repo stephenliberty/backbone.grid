@@ -106,11 +106,11 @@
                 
                     var _template = _.template([
                         "<tr>",
-                        "<td class='name'><span><%- name %><span></td>",
-                        "<td class='location'><span><%- location %><span></td>",
-                        "<td class='start'><%- moment(new Date(startDate)).format('MM/DD/YYYY') %></td>",
-                        "<td class='end'><%- moment(new Date(endDate)).format('MM/DD/YYYY') %></td>",
-                        "<td class='price'>$<%- price %></td>",
+                        "<td data-model-field-name='name' class='name'><span><%- name %><span></td>",
+                        "<td data-model-field-name='location' class='location'><span><%- location %><span></td>",
+                        "<td data-model-field-name='startDate' class='start'><%- moment(new Date(startDate)).format('MM/DD/YYYY') %></td>",
+                        "<td data-model-field-name='endDate' class='end'><%- moment(new Date(endDate)).format('MM/DD/YYYY') %></td>",
+                        "<td data-model-field-name='price' class='price'>$<%- price %></td>",
                         "</tr>"
                     ].join("\n"));
                     
@@ -232,6 +232,13 @@
                             });
                         },
                         basicScrollable: function () {
+                            var dateSort = function (column) {
+                                return function (a, b) {
+                                    var diff = a.get(column).getTime() - b.get(column).getTime();
+                                    if(diff == 0) {return 0;}
+                                    return diff > 1 ? 1 : -1;
+                                }
+                            }
                             this.before();
                             $("#demo").find('h2').text('Scrollable (and Sortable) behavior');
                             var self = this;
@@ -247,6 +254,10 @@
                                             behavior: Sortable, 
                                             options: {
                                                 defaultSortSelector: 'name'
+                                            },
+                                            sortCallbacks: {
+                                                startDate: dateSort,
+                                                endDate: dateSort
                                             }
                                         }
                                     ],
@@ -297,6 +308,16 @@
                         },
                         
                         basicCellEditable: function () {
+                            var dateEditor = function (data) {
+                                console.log(data)
+                                return _.template("<td data-model-field-name='<%= fieldName %>'><input type='date' value='<%= value %>'></td>")(data);
+                            }
+                            
+                            var getDateFromEditor = function (cell) {
+                                console.log(moment(cell.find('input[type=date]').val()))
+                                return moment(cell.find('input[type=date]').val());
+                            }
+                        
                             this.before();
                             $("#demo").find('h2').text('Editable behavior');
                             var self = this;
@@ -306,7 +327,19 @@
                                 self.currentGrid = new Grid({
                                     behaviors: [
                                         {
-                                            behavior: CellEditable
+                                            behavior: CellEditable,
+                                            options: {
+                                                editors: {
+                                                    startDate: {
+                                                        editor: dateEditor,
+                                                        evaluator: getDateFromEditor
+                                                    },
+                                                    endDate: {
+                                                        editor: dateEditor,
+                                                        evaluator: getDateFromEditor
+                                                    }
+                                                }
+                                            }
                                         },
                                         {
                                             behavior: Sortable, 
